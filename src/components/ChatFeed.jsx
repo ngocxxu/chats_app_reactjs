@@ -1,3 +1,5 @@
+import { getLatestMessages } from "react-chat-engine";
+import MessageForm from "./MessageForm";
 import MyMessage from "./MyMessage";
 import TheirMessage from "./TheirMessage";
 
@@ -7,17 +9,42 @@ const ChatFeed = ({ chats, activeChat, userName, messages, ...props }) => {
   const chat = chats && chats[activeChat];
   //console.log(chat);
   //console.log('chats[activeChat]',chats[activeChat])
+
+  const renderReadReceipts = (message, isMyMessage) => {
+    return chat.people.map((person, index) => {
+      return (
+        person.last_read == message.id && (
+          <div
+            key={`read_${index}`}
+            className="read-receipt"
+            style={{
+              float: isMyMessage ? "right" : "left",
+              backgroundImage: `url(${person?.person?.avatar})`,
+            }}
+          ></div>
+        )
+      );
+    });
+  };
+
   const renderMessage = () => {
     const keys = Object.keys(messages);
     //console.log(keys);
     return keys.map((key, index) => {
       const message = messages[key];
-      const lastMessage = index == 0 ? null : keys[index - 1];
+      const lastMessageKey = index == 0 ? null : keys[index - 1];
       const isMyMessage = userName == message.sender.username;
       return (
         <div key={`msg_${index}`} style={{ width: "100%" }}>
           <div className="message-block">
-            {isMyMessage ? <MyMessage /> : <TheirMessage />}
+            {isMyMessage ? (
+              <MyMessage message={message} />
+            ) : (
+              <TheirMessage
+                message={message}
+                lastMessage={messages[lastMessageKey]}
+              />
+            )}
           </div>
           <div
             className="read-receipts"
@@ -26,23 +53,28 @@ const ChatFeed = ({ chats, activeChat, userName, messages, ...props }) => {
               marginLeft: isMyMessage ? "0px" : "68px",
             }}
           >
-            read-receipt
+            {renderReadReceipts(message, isMyMessage)}
           </div>
         </div>
       );
     });
   };
   //goi ham`
-  renderMessage();
+  //renderMessage();
   //check !chat
-  if(!chat) return 'Loading...';
+  if (!chat) return "Loading...";
   return (
     <div className="chat-feed">
       <div className="chat-title-container">
         <div className="chat-title">{chat.title}</div>
         <div className="chat-subtitle">
-          {chat.people.map((person)=>`${person.person.username}`)}
+          {chat.people.map((person) => `${person.person.username}`)}
         </div>
+      </div>
+      {renderMessage()}
+      <div style={{ height: "100px" }}></div>
+      <div className="message-form-container">
+        <MessageForm {...props} chatId={activeChat} />
       </div>
     </div>
   );
